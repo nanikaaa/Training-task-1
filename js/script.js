@@ -1,4 +1,30 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const hamburger = document.getElementById("hamburger");
+    const mobileNav = document.getElementById("mobileNav");
+    const icon = hamburger.querySelector("i");
+
+    hamburger.addEventListener("click", function () {
+        if (mobileNav.style.display === "flex") {
+            mobileNav.style.display = "none";
+            icon.classList.remove("fa-times"); // Change back to bars icon
+            icon.classList.add("fa-bars");
+        } else {
+            mobileNav.style.display = "flex";
+            icon.classList.remove("fa-bars"); // Change to X icon
+            icon.classList.add("fa-times");
+        }
+    });
+
+    // Close the menu when clicking outside
+    document.addEventListener("click", function (event) {
+        if (!hamburger.contains(event.target) && !mobileNav.contains(event.target)) {
+            mobileNav.style.display = "none";
+            icon.classList.remove("fa-times"); // Reset to bars when menu is closed
+            icon.classList.add("fa-bars");
+        }
+    });
+
+    // Carousel Functionality
     function setupCarousel(wrapperSelector, trackSelector, prevBtnSelector, nextBtnSelector) {
         const wrapper = document.querySelector(wrapperSelector);
         if (!wrapper) return;
@@ -10,34 +36,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!track || !prevBtn || !nextBtn || images.length === 0) return;
 
-        const imgWidth = images[0].offsetWidth;
+        let index = 0;
+        let imgWidth = images[0].offsetWidth;
+        let visibleImages = window.innerWidth < 768 ? 1 : 3; // Show 1 image on mobile, 3 on desktop
 
-        track.style.transform = `translateX(-${imgWidth / 2}px)`;
+        function updateSlidePosition() {
+            imgWidth = images[0].offsetWidth;
+            visibleImages = window.innerWidth < 768 ? 1 : 3;
+            track.style.transition = "transform 0.5s ease-in-out";
+            track.style.transform = `translateX(-${index * imgWidth}px)`;
+        }
 
         function moveNext() {
-            track.style.transition = "transform 0.5s ease-in-out";
-            track.style.transform = `translateX(-${imgWidth * 1.5}px)`;
-
-            setTimeout(() => {
-                track.appendChild(track.firstElementChild); 
-                track.style.transition = "none";
-                track.style.transform = `translateX(-${imgWidth / 2}px)`;
-            }, 500);
+            if (index < images.length - visibleImages) {
+                index++;
+            } else {
+                index = 0;
+            }
+            updateSlidePosition();
         }
 
         function movePrev() {
-            track.style.transition = "transform 0.5s ease-in-out";
-            track.style.transform = `translateX(${imgWidth / 2}px)`;
-
-            setTimeout(() => {
-                track.prepend(track.lastElementChild); 
-                track.style.transition = "none";
-                track.style.transform = `translateX(-${imgWidth / 2}px)`;
-            }, 500);
+            if (index > 0) {
+                index--;
+            } else {
+                index = images.length - visibleImages;
+            }
+            updateSlidePosition();
         }
 
         nextBtn.addEventListener("click", moveNext);
         prevBtn.addEventListener("click", movePrev);
+        window.addEventListener("resize", updateSlidePosition);
+
+        // Initial positioning
+        updateSlidePosition();
     }
+
     setupCarousel(".carousel-slider-section", ".carousel-track", ".carousel-prev", ".carousel-next");
 });
